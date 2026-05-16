@@ -255,7 +255,7 @@ input:focus,textarea:focus{border-color:#4285F4}
       <div class="settings-section-title">🔑 Clé API Gemini</div>
       <div class="input-wrap">
         <input type="password" id="apiKeySettings"
-          placeholder="Laisser vide pour utiliser la clé intégrée (recommandé)"
+          placeholder="Entrez votre clé API Gemini (AIza...)"
           autocomplete="off" oninput="onApiKeyInput()"/>
         <button class="eye-btn" onclick="toggleKeyVis()">👁️</button>
       </div>
@@ -396,7 +396,7 @@ input:focus,textarea:focus{border-color:#4285F4}
 //  CONSTANTS
 // ══════════════════════════════════════════════════════════════
 
-const DEFAULT_API_KEY = 'AIzaSyAoEOFqsWAVtjqsxQGtkoW6bhsRIwfDdu8';
+const DEFAULT_API_KEY = '';
 
 const DEFAULT_PROMPT =
 `Tu es un expert en pédagogie et en transmission du savoir (cours académiques, religieux, techniques). \
@@ -627,11 +627,14 @@ function onApiKeyInput() {
   const resetBtn = document.getElementById('resetKeyBtn');
   if (custom) {
     badge.className = 'badge badge-custom';
-    badge.textContent = '✓ Clé personnalisée active';
+    badge.textContent = '✓ Clé enregistrée';
     resetBtn.style.display = '';
   } else {
-    badge.className = 'badge badge-default';
-    badge.textContent = '✓ Clé intégrée par défaut';
+    badge.className = 'badge' + (DEFAULT_API_KEY ? ' badge-default' : '');
+    badge.style.background = DEFAULT_API_KEY ? '' : '#EA433512';
+    badge.style.color = DEFAULT_API_KEY ? '' : '#FF8888';
+    badge.style.border = DEFAULT_API_KEY ? '' : '1px solid #EA433533';
+    badge.textContent = DEFAULT_API_KEY ? '✓ Clé intégrée' : '⚠ Aucune clé — entrez votre clé ci-dessus';
     resetBtn.style.display = 'none';
   }
   saveSettings();
@@ -660,7 +663,7 @@ function updateToggleStatus() {
   const custom = document.getElementById('apiKeySettings').value.trim();
   const T = THEMES[selectedTheme];
   const parts = [
-    custom ? 'Clé personnalisée' : 'Clé intégrée',
+    custom ? 'Clé active' : (DEFAULT_API_KEY ? 'Clé intégrée' : '⚠ Clé manquante'),
     T ? T.name : selectedTheme
   ];
   document.getElementById('tglStatus').textContent = parts.join(' · ');
@@ -1125,6 +1128,7 @@ function renderPreview(slides) {
 
 async function generate() {
   if (!currentFile) return showError('Veuillez charger un fichier PDF.');
+  if (!getEffectiveApiKey()) return showError('Entrez votre clé API Gemini dans les Paramètres avancés.');
   hideError();
   setRunning(true);
   document.getElementById('progressCard').classList.add('show');
