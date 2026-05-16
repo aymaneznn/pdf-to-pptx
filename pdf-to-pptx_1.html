@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PDF → PowerPoint · Gemini AI</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#07080F;color:#E8EAFF;font-family:'DM Sans',system-ui,sans-serif;min-height:100vh;padding:40px 16px}
+
+  .wrap{max-width:660px;margin:0 auto}
+
+  /* Header */
+  .header{text-align:center;margin-bottom:44px}
+  .dots{display:inline-flex;align-items:center;gap:8px;margin-bottom:18px}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .dot-label{font-size:12px;color:#6B7094;margin-left:6px;font-weight:500}
+  h1{font-size:44px;font-weight:700;letter-spacing:-2px;
+    background:linear-gradient(135deg,#E8EAFF 30%,#4285F4);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    line-height:1.1;margin-bottom:12px}
+  .subtitle{color:#6B7094;font-size:15px;line-height:1.7}
+  .subtitle strong{color:#34A853}
+
+  /* Cards */
+  .card{background:#141622;border:1px solid #1E2235;border-radius:16px;padding:22px;margin-bottom:14px}
+
+  /* API key section */
+  .card-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .icon-box{width:34px;height:34px;border-radius:8px;background:#4285F418;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+  .card-title{font-weight:600;font-size:14px}
+  .card-sub{font-size:11px;color:#6B7094}
+  .get-btn{margin-left:auto;font-size:12px;color:#4285F4;text-decoration:none;
+    background:#4285F418;border:1px solid #4285F433;border-radius:7px;
+    padding:5px 12px;font-weight:600;white-space:nowrap}
+  .get-btn:hover{background:#4285F430}
+
+  .input-wrap{position:relative}
+  input[type=password],input[type=text]{
+    width:100%;background:#0E1019;border:1px solid #1E2235;border-radius:10px;
+    padding:11px 44px 11px 14px;color:#E8EAFF;font-size:13px;outline:none;
+    font-family:'DM Mono',monospace;transition:border .2s}
+  input:focus{border-color:#4285F4}
+  .eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);
+    background:none;border:none;color:#6B7094;cursor:pointer;font-size:17px;padding:0}
+
+  .quota-badge{margin-top:10px;padding:9px 13px;background:#34A85312;
+    border:1px solid #34A85322;border-radius:8px;font-size:11px;color:#34A853}
+
+  /* Drop zone */
+  .dropzone{background:#141622;border:2px dashed #1E2235;border-radius:16px;
+    padding:36px 24px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px}
+  .dropzone:hover,.dropzone.drag{background:#4285F410;border-color:#4285F4}
+  .dropzone .icon{font-size:46px;margin-bottom:12px}
+  .dropzone .dz-title{font-weight:600;font-size:16px;margin-bottom:6px}
+  .dropzone .dz-sub{color:#6B7094;font-size:13px}
+  .dropzone.has-file .dz-title{color:#4285F4}
+  #fileInput{display:none}
+
+  /* Error */
+  .error{background:#EA433515;border:1px solid #EA433544;border-radius:10px;
+    padding:12px 16px;font-size:13px;color:#FF8888;margin-bottom:14px;display:none}
+  .error.show{display:block}
+
+  /* CTA */
+  #genBtn{width:100%;padding:16px;border-radius:14px;border:none;
+    background:linear-gradient(135deg,#4285F4,#0E6CF4);
+    color:#fff;font-size:16px;font-weight:700;cursor:pointer;
+    transition:all .2s;letter-spacing:.3px;margin-bottom:20px;
+    box-shadow:0 4px 24px #4285F444;font-family:'DM Sans',sans-serif}
+  #genBtn:disabled{background:#2A2D45;box-shadow:none;cursor:not-allowed}
+
+  /* Progress */
+  .progress-card{display:none}
+  .progress-card.show{display:block}
+  .steps{display:flex;flex-direction:column;gap:14px;margin-bottom:16px}
+  .step{display:flex;align-items:center;gap:10px}
+  .step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;
+    justify-content:center;font-size:12px;font-weight:700;color:#fff;
+    background:#2A2D45;transition:background .3s;flex-shrink:0}
+  .step-num.active{background:#4285F4;box-shadow:0 0 12px #4285F488}
+  .step-num.done{background:#34A853}
+  .step-label{font-size:13px;color:#6B7094;font-weight:400}
+  .step-label.active{color:#E8EAFF;font-weight:600}
+  .step-label.done{color:#34A853}
+  .pbar-track{background:#1E2235;border-radius:99px;height:4px;overflow:hidden}
+  .pbar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#4285F4,#4285F4BB);
+    width:0%;transition:width .5s cubic-bezier(.4,0,.2,1)}
+  .pbar-row{display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:#6B7094}
+
+  /* Success */
+  .success{display:none;background:#34A85312;border:1px solid #34A85344;
+    border-radius:14px;padding:22px;text-align:center;margin-bottom:20px}
+  .success.show{display:block}
+  .success-icon{font-size:38px;margin-bottom:8px}
+  .success-title{font-weight:700;color:#34A853;font-size:17px;margin-bottom:4px}
+  .success-sub{color:#6B7094;font-size:13px}
+  .success-sub code{font-family:'DM Mono',monospace;color:#4285F4;font-size:12px}
+
+  /* Slides preview */
+  #preview{display:none}
+  #preview.show{display:block}
+  .preview-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .preview-header h2{font-size:15px;font-weight:700}
+  .count-tag{background:#4285F418;color:#4285F4;border:1px solid #4285F433;
+    border-radius:6px;padding:2px 9px;font-size:11px;font-weight:600}
+  .slide-list{display:flex;flex-direction:column;gap:8px}
+  .slide-item{background:#141622;border:1px solid #1E2235;border-radius:12px;
+    padding:14px 16px;display:flex;gap:14px;align-items:flex-start}
+  .slide-num{min-width:32px;height:32px;border-radius:8px;display:flex;align-items:center;
+    justify-content:center;font-weight:700;font-size:12px;flex-shrink:0}
+  .slide-content{flex:1;min-width:0}
+  .slide-title{font-weight:600;color:#E8EAFF;font-size:13px;margin-bottom:5px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .slide-bullets{display:flex;flex-direction:column;gap:3px}
+  .slide-bullet{font-size:11px;color:#6B7094;display:flex;gap:6px;overflow:hidden}
+  .slide-bullet span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* Spinner */
+  @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  .spinner{display:inline-block;width:16px;height:16px;
+    border:2px solid #ffffff33;border-top:2px solid #fff;
+    border-radius:50%;animation:spin 1s linear infinite;vertical-align:middle;margin-right:8px}
+
+  /* Footer */
+  .footer{text-align:center;margin-top:44px;color:#3A3D5C;font-size:11px;line-height:1.9}
+
+  /* Fade in */
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .card,.dropzone,.progress-card,.success,#preview{animation:fadeUp .4s ease}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="dots">
+      <div class="dot" style="background:#4285F4"></div>
+      <div class="dot" style="background:#34A853"></div>
+      <div class="dot" style="background:#FBBC04"></div>
+      <div class="dot" style="background:#EA4335"></div>
+      <span class="dot-label">Google Gemini · Gratuit</span>
+    </div>
+    <h1>PDF → PowerPoint</h1>
+    <p class="subtitle">
+      Charge un cours PDF · L'IA Gemini génère automatiquement des slides cohérentes<br>
+      <strong>100% gratuit</strong> · Aucune carte bancaire · Ouvre ce fichier localement
+    </p>
+  </div>
+
+  <!-- API Key -->
+  <div class="card">
+    <div class="card-header">
+      <div class="icon-box">🔑</div>
+      <div>
+        <div class="card-title">Clé API Google Gemini</div>
+        <div class="card-sub">Gratuite sur Google AI Studio</div>
+      </div>
+      <a class="get-btn" href="https://aistudio.google.com/app/apikey" target="_blank">Obtenir →</a>
+    </div>
+    <div class="input-wrap">
+      <input type="password" id="apiKey" placeholder="AIza..." autocomplete="off"/>
+      <button class="eye-btn" onclick="toggleKey()">👁️</button>
+    </div>
+    <div class="quota-badge">
+      ✓ &nbsp;500 requêtes/jour · Gratuit à vie · Aucune CB requise · Quota se renouvelle chaque jour
+    </div>
+  </div>
+
+  <!-- Drop zone -->
+  <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()"
+    ondragover="ev(event,'over')" ondragleave="ev(event,'leave')" ondrop="ev(event,'drop')">
+    <input type="file" id="fileInput" accept=".pdf" onchange="pickFile(this.files[0])"/>
+    <div class="icon" id="dzIcon">📂</div>
+    <div class="dz-title" id="dzTitle">Glisse ton PDF ici</div>
+    <div class="dz-sub" id="dzSub">ou clique pour parcourir · max 50 Mo</div>
+  </div>
+
+  <!-- Error -->
+  <div class="error" id="error"></div>
+
+  <!-- CTA -->
+  <button id="genBtn" onclick="generate()">🚀&nbsp; Générer le PowerPoint</button>
+
+  <!-- Progress -->
+  <div class="card progress-card" id="progressCard">
+    <div class="steps" id="steps">
+      <div class="step" id="step0">
+        <div class="step-num" id="snum0">1</div>
+        <div class="step-label" id="slbl0">Lecture du PDF</div>
+      </div>
+      <div class="step" id="step1">
+        <div class="step-num" id="snum1">2</div>
+        <div class="step-label" id="slbl1">Analyse IA (Gemini)</div>
+      </div>
+      <div class="step" id="step2">
+        <div class="step-num" id="snum2">3</div>
+        <div class="step-label" id="slbl2">Construction du PPTX</div>
+      </div>
+    </div>
+    <div class="pbar-track"><div class="pbar-fill" id="pbar"></div></div>
+    <div class="pbar-row"><span id="pbarLabel">En cours...</span><span id="pbarPct">0%</span></div>
+  </div>
+
+  <!-- Success -->
+  <div class="success" id="success">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">Présentation générée !</div>
+    <div class="success-sub">
+      Téléchargée dans tes <strong style="color:#E8EAFF">Téléchargements</strong> →
+      <code id="fileName"></code>
+    </div>
+  </div>
+
+  <!-- Slides preview -->
+  <div id="preview">
+    <div class="preview-header">
+      <h2>📋 Aperçu des slides</h2>
+      <span class="count-tag" id="slideCount"></span>
+    </div>
+    <div class="slide-list" id="slideList"></div>
+  </div>
+
+  <div class="footer">
+    Propulsé par Google Gemini 2.5 Flash · Ta clé ne quitte jamais ton ordinateur<br>
+    Ouvre ce fichier HTML directement dans Chrome / Firefox / Edge — aucun serveur requis
+  </div>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────
+let currentFile = null;
+const COLORS = ['#4285F4','#34A853','#A78BFA','#F97316','#FBBC04'];
+
+// ── File drag/drop ─────────────────────────────────────────
+function ev(e, type) {
+  e.preventDefault();
+  const dz = document.getElementById('dropzone');
+  if (type === 'over') dz.classList.add('drag');
+  else if (type === 'leave') dz.classList.remove('drag');
+  else if (type === 'drop') { dz.classList.remove('drag'); pickFile(e.dataTransfer.files[0]); }
+}
+
+function pickFile(f) {
+  if (!f) return;
+  if (f.type !== 'application/pdf') return showError('Fichier invalide — veuillez sélectionner un PDF.');
+  currentFile = f;
+  document.getElementById('dzIcon').textContent = '📄';
+  document.getElementById('dzTitle').textContent = f.name;
+  document.getElementById('dzTitle').style.color = '#4285F4';
+  document.getElementById('dzSub').textContent = (f.size/1024).toFixed(0) + ' Ko · Cliquer pour changer';
+  hideError();
+}
+
+function toggleKey() {
+  const inp = document.getElementById('apiKey');
+  const btn = document.querySelector('.eye-btn');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁️' : '🙈';
+}
+
+// ── UI helpers ─────────────────────────────────────────────
+function showError(msg) {
+  const el = document.getElementById('error');
+  el.textContent = '⚠️  ' + msg;
+  el.classList.add('show');
+}
+function hideError() { document.getElementById('error').classList.remove('show'); }
+
+function setProgress(pct, label) {
+  document.getElementById('pbar').style.width = pct + '%';
+  document.getElementById('pbarPct').textContent = pct + '%';
+  if (label) document.getElementById('pbarLabel').textContent = label;
+}
+
+function setStep(idx) {
+  for (let i = 0; i < 3; i++) {
+    const num = document.getElementById('snum' + i);
+    const lbl = document.getElementById('slbl' + i);
+    num.className = 'step-num' + (i < idx ? ' done' : i === idx ? ' active' : '');
+    num.textContent = i < idx ? '✓' : i + 1;
+    lbl.className = 'step-label' + (i < idx ? ' done' : i === idx ? ' active' : '');
+  }
+}
+
+function setRunning(yes) {
+  const btn = document.getElementById('genBtn');
+  btn.disabled = yes;
+  btn.innerHTML = yes
+    ? '<span class="spinner"></span>Génération en cours...'
+    : '🚀&nbsp; Générer le PowerPoint';
+}
+
+// ── Base64 ─────────────────────────────────────────────────
+function toBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+// ── Gemini API ─────────────────────────────────────────────
+async function callGemini(apiKey, b64, prompt) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  const body = {
+    contents: [{ parts: [
+      { inline_data: { mime_type: 'application/pdf', data: b64 } },
+      { text: prompt }
+    ]}],
+    generationConfig: { temperature: 0.3, maxOutputTokens: 8192 }
+  };
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    const msg = err?.error?.message || '';
+    if (res.status === 400 || res.status === 403) throw new Error('Clé API invalide. Vérifie sur aistudio.google.com/app/apikey');
+    if (res.status === 429) throw new Error('Quota Gemini atteint. Réessaie dans 1 minute.');
+    throw new Error(msg || 'Erreur API ' + res.status);
+  }
+  const data = await res.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
+
+// ── Load PptxGenJS dynamically with fallbacks ──────────────
+function loadScript(url) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = url;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+async function ensurePptx() {
+  if (window.PptxGenJS) return;
+  const cdns = [
+    'https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js',
+    'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js',
+    'https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js',
+  ];
+  for (const url of cdns) {
+    try { await loadScript(url); if (window.PptxGenJS) return; } catch(e) {}
+  }
+  throw new Error('Impossible de charger PptxGenJS. Vérifie ta connexion internet.');
+}
+
+// ── Build PPTX ─────────────────────────────────────────────
+async function buildPptx(data) {
+  await ensurePptx();
+  const pptx = new PptxGenJS();
+  pptx.layout = 'LAYOUT_16x9';
+  pptx.title  = data.courseTitle;
+
+  const DARK='07080F', NAVY='0E1019', WHITE='E8EAFF', BLUE='4285F4', GREEN='34A853', MUTED='6B7094';
+
+  data.slides.forEach((slide, i) => {
+    const s = pptx.addSlide();
+    const isTitle   = i === 0 || slide.type === 'title';
+    const isSummary = i === data.slides.length - 1 || slide.type === 'summary';
+    const accent    = (i % 2 === 0) ? BLUE : GREEN;
+
+    if (isTitle) {
+      s.addShape(pptx.ShapeType.rect,    {x:0,y:0,w:'100%',h:'100%',fill:{color:DARK}});
+      s.addShape(pptx.ShapeType.rect,    {x:0,y:0,w:0.06,h:'100%',fill:{color:BLUE}});
+      s.addShape(pptx.ShapeType.rect,    {x:0,y:'82%',w:'100%',h:'18%',fill:{color:NAVY}});
+      ['4285F4','34A853','FBBC04','EA4335'].forEach((c,ci) => {
+        s.addShape(pptx.ShapeType.ellipse,{x:0.35+ci*0.28,y:4.75,w:0.14,h:0.14,fill:{color:c}});
+      });
+      s.addText(slide.title, {x:0.5,y:1.1,w:9,h:2.2,fontSize:38,bold:true,color:WHITE,fontFace:'Calibri',align:'left',valign:'middle',wrap:true});
+      if (slide.bullets?.[0]) s.addText(slide.bullets[0], {x:0.5,y:3.4,w:8.5,h:0.7,fontSize:18,color:MUTED,fontFace:'Calibri',align:'left'});
+      s.addText(`${data.slides.length-2} sections · Généré avec Gemini AI`, {x:0.5,y:5.0,w:8,h:0.35,fontSize:10,color:'3A3D5C',fontFace:'Calibri'});
+
+    } else if (isSummary) {
+      s.addShape(pptx.ShapeType.rect,{x:0,y:0,w:'100%',h:'100%',fill:{color:DARK}});
+      s.addShape(pptx.ShapeType.rect,{x:0,y:0,w:'100%',h:0.08,fill:{color:GREEN}});
+      s.addShape(pptx.ShapeType.rect,{x:0,y:0.08,w:'100%',h:'26%',fill:{color:NAVY}});
+      s.addText(slide.title, {x:0.5,y:0.2,w:9,h:1.1,fontSize:30,bold:true,color:WHITE,fontFace:'Calibri',align:'left'});
+      const bullets = (slide.bullets||[]).map(b => ({
+        text:b, options:{fontSize:14,color:WHITE,breakLine:true,paraSpaceAfter:12,
+          bullet:{type:'bullet',characterCode:'25A0',color:GREEN},fontFace:'Calibri'}
+      }));
+      s.addText(bullets,{x:0.6,y:1.6,w:8.5,h:3.6,valign:'top'});
+      s.addText(`${i+1}/${data.slides.length}`,{x:8.3,y:5.15,w:1.5,h:0.25,fontSize:9,color:'3A3D5C',align:'right'});
+
+    } else {
+      s.addShape(pptx.ShapeType.rect,{x:0,y:0,w:'100%',h:'100%',fill:{color:'F9FAFF'}});
+      s.addShape(pptx.ShapeType.rect,{x:0,y:0,w:'100%',h:1.15,fill:{color:DARK}});
+      s.addShape(pptx.ShapeType.rect,{x:0,y:0,w:0.06,h:'100%',fill:{color:accent}});
+      s.addShape(pptx.ShapeType.roundRect,{x:8.95,y:0.35,w:0.55,h:0.4,fill:{color:accent},rectRadius:0.08});
+      s.addText(`${i}`,{x:8.95,y:0.35,w:0.55,h:0.4,fontSize:11,bold:true,color:'FFFFFF',align:'center',valign:'middle'});
+      s.addText(slide.title,{x:0.3,y:0.12,w:8.5,h:0.9,fontSize:24,bold:true,color:WHITE,fontFace:'Calibri',align:'left'});
+      (slide.bullets||[]).forEach((b,bi) => {
+        if (bi%2===0) s.addShape(pptx.ShapeType.rect,{x:0.15,y:1.3+bi*0.72,w:9.5,h:0.68,fill:{color:'EEF2FF'}});
+        s.addShape(pptx.ShapeType.rect,{x:0.18,y:1.46+bi*0.72,w:0.06,h:0.36,fill:{color:accent}});
+        s.addText(b,{x:0.38,y:1.3+bi*0.72,w:9.2,h:0.68,fontSize:14,color:'1A1C2E',fontFace:'Calibri',align:'left',valign:'middle'});
+      });
+      if (slide.notes) s.addNotes(slide.notes);
+    }
+  });
+
+  const safe = (data.courseTitle||'cours').replace(/[^a-zA-Z0-9À-ÿ _-]/g,'').trim();
+  await pptx.writeFile({fileName: safe + '.pptx'});
+  return safe;
+}
+
+// ── Slides preview ─────────────────────────────────────────
+function renderPreview(slides, total) {
+  document.getElementById('slideCount').textContent = total + ' slides';
+  const list = document.getElementById('slideList');
+  list.innerHTML = '';
+  slides.forEach((sl, i) => {
+    const col = COLORS[i % COLORS.length];
+    const item = document.createElement('div');
+    item.className = 'slide-item';
+    const bulletsHtml = (sl.bullets||[]).slice(0,3).map(b =>
+      `<div class="slide-bullet"><span style="color:${col};flex-shrink:0">›</span><span>${b}</span></div>`
+    ).join('') + (sl.bullets?.length > 3 ? `<div style="font-size:11px;color:${col}">+${sl.bullets.length-3} points</div>` : '');
+    item.innerHTML = `
+      <div class="slide-num" style="background:${col}1A;border:1.5px solid ${col}55;color:${col}">${i+1}</div>
+      <div class="slide-content">
+        <div class="slide-title">${sl.title}</div>
+        <div class="slide-bullets">${bulletsHtml}</div>
+      </div>`;
+    list.appendChild(item);
+  });
+  document.getElementById('preview').classList.add('show');
+}
+
+// ── Main generate ──────────────────────────────────────────
+async function generate() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!currentFile) return showError('Veuillez charger un fichier PDF.');
+  if (!apiKey)      return showError('Veuillez entrer votre clé API Gemini.');
+  hideError();
+  setRunning(true);
+
+  document.getElementById('progressCard').classList.add('show');
+  document.getElementById('success').classList.remove('show');
+  document.getElementById('preview').classList.remove('show');
+
+  try {
+    // Step 1 — read PDF
+    setStep(0); setProgress(10, 'Lecture du PDF...');
+    const b64 = await toBase64(currentFile);
+    setProgress(25);
+
+    // Step 2 — Gemini
+    setStep(1); setProgress(30, 'Analyse IA en cours...');
+    const prompt = `Tu es un expert en pédagogie. Analyse ce cours PDF et génère un plan de présentation PowerPoint structuré.
+
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans balises markdown ni texte autour.
+
+Format attendu :
+{
+  "courseTitle": "Titre court du cours",
+  "slides": [
+    {
+      "title": "Titre de la slide",
+      "bullets": ["Point 1", "Point 2", "Point 3"],
+      "notes": "Notes pour le présentateur",
+      "type": "title"
+    }
+  ]
+}
+
+Règles strictes :
+- 10 à 14 slides maximum
+- Slide 1 : type "title", titre du cours + sous-titre en bullets[0]
+- Dernière slide : type "summary", récapitulatif des points clés
+- Slides intermédiaires : type "content", 3 à 5 bullets clairs et mémorables
+- Bullets : phrases courtes (max 12 mots), percutantes et pédagogiques
+- Respecte la logique pédagogique du document
+- Les notes expliquent ce que le professeur dirait à l'oral`;
+
+    const raw = await callGemini(apiKey, b64, prompt);
+    setProgress(65, 'Structuration des slides...');
+
+    // Parse JSON
+    let parsed;
+    try {
+      const clean = raw.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim();
+      parsed = JSON.parse(clean);
+    } catch {
+      throw new Error('Réponse IA non lisible. Réessaie ou utilise un PDF plus court.');
+    }
+    if (!parsed.slides?.length) throw new Error('Aucune slide générée. PDF peut-être trop court ou illisible.');
+
+    // Step 3 — build PPTX
+    setStep(2); setProgress(75, 'Construction du fichier PPTX...');
+    const safeName = await buildPptx(parsed);
+    setProgress(100, '✅ Terminé !');
+
+    // Show results
+    document.getElementById('fileName').textContent = safeName + '.pptx';
+    document.getElementById('success').classList.add('show');
+    renderPreview(parsed.slides, parsed.slides.length);
+
+  } catch (e) {
+    showError(e.message || 'Erreur inconnue.');
+    document.getElementById('progressCard').classList.remove('show');
+  } finally {
+    setRunning(false);
+  }
+}
+</script>
+</body>
+</html>

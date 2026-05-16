@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PDF → PowerPoint · Gemini AI</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#07080F;color:#E8EAFF;font-family:'DM Sans',system-ui,sans-serif;min-height:100vh;padding:40px 16px}
+.wrap{max-width:700px;margin:0 auto}
+
+/* Header */
+.header{text-align:center;margin-bottom:44px}
+.dots{display:inline-flex;align-items:center;gap:8px;margin-bottom:18px}
+.dot{width:11px;height:11px;border-radius:50%}
+.dot-label{font-size:12px;color:#6B7094;margin-left:6px;font-weight:500}
+h1{font-size:44px;font-weight:700;letter-spacing:-2px;
+  background:linear-gradient(135deg,#E8EAFF 30%,#4285F4);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  line-height:1.1;margin-bottom:12px}
+.subtitle{color:#6B7094;font-size:15px;line-height:1.7}
+.subtitle strong{color:#34A853}
+
+/* Cards */
+.card{background:#141622;border:1px solid #1E2235;border-radius:16px;padding:22px;margin-bottom:14px}
+
+/* Inputs */
+.input-wrap{position:relative}
+input[type=password],input[type=text],input[type=number],textarea{
+  width:100%;background:#0E1019;border:1px solid #1E2235;border-radius:10px;
+  color:#E8EAFF;font-size:13px;outline:none;transition:border .2s;
+  font-family:'DM Mono',monospace}
+input[type=password],input[type=text]{padding:11px 44px 11px 14px}
+input[type=number]{padding:8px 10px;width:80px;text-align:center}
+textarea{padding:11px 14px;resize:vertical;line-height:1.6}
+input:focus,textarea:focus{border-color:#4285F4}
+.eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:#6B7094;cursor:pointer;font-size:17px;padding:0}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;font-size:11px;padding:4px 10px;
+  border-radius:6px;font-weight:600;white-space:nowrap}
+.badge-default{background:#4285F418;color:#4285F4;border:1px solid #4285F433}
+.badge-custom{background:#34A85318;color:#34A853;border:1px solid #34A85333}
+.badge-quota{background:#34A85312;border:1px solid #34A85322;color:#34A853}
+
+/* Settings toggle */
+.settings-toggle{width:100%;background:#141622;border:1px solid #1E2235;border-radius:14px;
+  padding:14px 18px;display:flex;align-items:center;gap:10px;cursor:pointer;
+  color:#E8EAFF;font-size:13px;font-weight:600;margin-bottom:14px;transition:all .2s;
+  font-family:'DM Sans',sans-serif}
+.settings-toggle:hover{background:#1A1E2E;border-color:#2A2D45}
+.settings-toggle .tgl-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.settings-toggle .tgl-arrow{font-size:14px;color:#6B7094;transition:transform .3s}
+.settings-toggle.open .tgl-arrow{transform:rotate(180deg)}
+.settings-toggle .tgl-status{font-size:11px;color:#6B7094;font-weight:400}
+
+/* Settings panel */
+.settings-panel{display:none}
+.settings-panel.open{display:block;animation:fadeUp .3s ease}
+.settings-section{margin-bottom:22px}
+.settings-section:last-child{margin-bottom:0}
+.settings-section-title{font-size:11px;font-weight:700;color:#6B7094;text-transform:uppercase;
+  letter-spacing:.8px;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.settings-sep{height:1px;background:#1E2235;margin:20px 0}
+
+/* Key status */
+.key-status{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.reset-key-btn{font-size:11px;color:#6B7094;background:none;border:1px solid #1E2235;
+  border-radius:6px;padding:4px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.reset-key-btn:hover{color:#E8EAFF;border-color:#2A2D45}
+
+/* Prompt mode radio */
+.radio-group{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.radio-option{display:flex;align-items:flex-start;gap:12px;padding:11px 14px;
+  background:#0E1019;border:1.5px solid #1E2235;border-radius:11px;cursor:pointer;transition:all .2s}
+.radio-option:hover{border-color:#2A2D45}
+.radio-option.selected{border-color:#4285F455;background:#4285F408}
+.radio-dot-outer{width:16px;height:16px;border-radius:50%;border:2px solid #2A2D45;
+  flex-shrink:0;margin-top:3px;transition:all .2s;position:relative}
+.radio-option.selected .radio-dot-outer{border-color:#4285F4}
+.radio-option.selected .radio-dot-outer::after{content:'';position:absolute;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  width:7px;height:7px;border-radius:50%;background:#4285F4}
+.radio-label{font-size:13px;font-weight:600;color:#E8EAFF;margin-bottom:2px}
+.radio-desc{font-size:11px;color:#6B7094;line-height:1.5}
+
+/* Prompt viewer */
+.prompt-view-btn{font-size:11px;color:#4285F4;background:#4285F410;border:1px solid #4285F433;
+  border-radius:7px;padding:5px 11px;cursor:pointer;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .2s}
+.prompt-view-btn:hover{background:#4285F420}
+.prompt-viewer{display:none;margin-top:10px}
+.prompt-viewer.show{display:block}
+.prompt-viewer textarea{font-size:11px;color:#9BA3D4;background:#060810;
+  border-color:#1E2235;min-height:180px;cursor:default;line-height:1.7}
+.custom-prompt-wrap{display:none;margin-top:12px}
+.custom-prompt-wrap.show{display:block;animation:fadeUp .25s ease}
+.custom-prompt-label{font-size:11px;color:#6B7094;margin-bottom:7px;line-height:1.5}
+.custom-prompt-wrap textarea{min-height:110px;font-size:12px}
+
+/* Density */
+.density-group{display:flex;gap:8px}
+.density-btn{flex:1;padding:9px 10px;background:#0E1019;border:1.5px solid #1E2235;
+  border-radius:10px;color:#6B7094;font-size:12px;font-weight:600;cursor:pointer;
+  text-align:center;transition:all .2s;font-family:'DM Sans',sans-serif;line-height:1.4}
+.density-btn:hover{border-color:#2A2D45;color:#E8EAFF}
+.density-btn.active{border-color:#4285F455;background:#4285F410;color:#4285F4}
+.density-sub{font-size:10px;font-weight:400;display:block;margin-top:2px}
+
+/* Slides range */
+.slides-range{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.slides-range label{font-size:12px;color:#6B7094;flex-shrink:0}
+.slides-range .range-hint{font-size:11px;color:#3A3D5C}
+
+/* Theme grid */
+.theme-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media(max-width:500px){.theme-grid{grid-template-columns:repeat(3,1fr)}}
+.theme-card{cursor:pointer;border-radius:11px;border:2px solid #1E2235;overflow:hidden;
+  transition:all .2s;background:#0E1019}
+.theme-card:hover{border-color:#4285F455;transform:translateY(-2px)}
+.theme-card.active{border-color:#4285F4;box-shadow:0 0 0 3px #4285F425}
+.theme-swatch{height:40px;display:flex}
+.theme-swatch-a,.theme-swatch-b{flex:1;height:100%}
+.theme-card-body{padding:7px 8px 8px}
+.theme-card-name{font-size:11px;font-weight:700;color:#E8EAFF;margin-bottom:1px}
+.theme-card-sub{font-size:10px;color:#6B7094}
+
+/* Drop zone */
+.dropzone{background:#141622;border:2px dashed #1E2235;border-radius:16px;
+  padding:36px 24px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px}
+.dropzone:hover,.dropzone.drag{background:#4285F410;border-color:#4285F4}
+.dropzone .icon{font-size:46px;margin-bottom:12px}
+.dropzone .dz-title{font-weight:600;font-size:16px;margin-bottom:6px}
+.dropzone .dz-sub{color:#6B7094;font-size:13px}
+#fileInput{display:none}
+
+/* Error */
+.error{background:#EA433515;border:1px solid #EA433544;border-radius:10px;
+  padding:12px 16px;font-size:13px;color:#FF8888;margin-bottom:14px;display:none}
+.error.show{display:block}
+
+/* CTA */
+#genBtn{width:100%;padding:16px;border-radius:14px;border:none;
+  background:linear-gradient(135deg,#4285F4,#0E6CF4);
+  color:#fff;font-size:16px;font-weight:700;cursor:pointer;
+  transition:all .2s;letter-spacing:.3px;margin-bottom:20px;
+  box-shadow:0 4px 24px #4285F444;font-family:'DM Sans',sans-serif}
+#genBtn:hover:not(:disabled){box-shadow:0 6px 32px #4285F466}
+#genBtn:disabled{background:#2A2D45;box-shadow:none;cursor:not-allowed}
+
+/* Progress */
+.progress-card{display:none}
+.progress-card.show{display:block}
+.steps{display:flex;flex-direction:column;gap:14px;margin-bottom:16px}
+.step{display:flex;align-items:center;gap:10px}
+.step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:12px;font-weight:700;color:#fff;
+  background:#2A2D45;transition:background .3s;flex-shrink:0}
+.step-num.active{background:#4285F4;box-shadow:0 0 12px #4285F488}
+.step-num.done{background:#34A853}
+.step-label{font-size:13px;color:#6B7094;font-weight:400}
+.step-label.active{color:#E8EAFF;font-weight:600}
+.step-label.done{color:#34A853}
+.pbar-track{background:#1E2235;border-radius:99px;height:5px;overflow:hidden;margin-top:10px}
+.pbar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#4285F4,#34A853);
+  width:0%;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.pbar-row{display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:#6B7094}
+.step-hint{font-size:11px;color:#3A3D5C;margin-top:4px;margin-left:38px;display:none}
+.step-hint.show{display:block}
+
+/* Success */
+.success{display:none;background:#34A85312;border:1px solid #34A85344;
+  border-radius:14px;padding:22px;text-align:center;margin-bottom:20px}
+.success.show{display:block;animation:fadeUp .4s ease}
+.success-icon{font-size:38px;margin-bottom:8px}
+.success-title{font-weight:700;color:#34A853;font-size:17px;margin-bottom:4px}
+.success-sub{color:#6B7094;font-size:13px}
+.success-sub code{font-family:'DM Mono',monospace;color:#4285F4;font-size:12px}
+.success-stats{display:flex;justify-content:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+.success-stat{font-size:12px;color:#6B7094;background:#0E1019;border:1px solid #1E2235;
+  border-radius:8px;padding:6px 14px}
+.success-stat strong{color:#E8EAFF}
+
+/* Preview */
+#preview{display:none}
+#preview.show{display:block}
+.preview-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.preview-header h2{font-size:15px;font-weight:700}
+.count-tag{background:#4285F418;color:#4285F4;border:1px solid #4285F433;
+  border-radius:6px;padding:2px 9px;font-size:11px;font-weight:600}
+.arabic-tag{background:#FBBC0418;color:#FBBC04;border:1px solid #FBBC0433;
+  border-radius:6px;padding:2px 9px;font-size:11px;font-weight:600}
+.slide-list{display:flex;flex-direction:column;gap:8px}
+.slide-item{background:#141622;border:1px solid #1E2235;border-radius:12px;
+  padding:14px 16px;display:flex;gap:14px;align-items:flex-start}
+.slide-num{min-width:32px;height:32px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;font-weight:700;font-size:12px;flex-shrink:0}
+.slide-content{flex:1;min-width:0}
+.slide-title{font-weight:600;color:#E8EAFF;font-size:13px;margin-bottom:5px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slide-bullets{display:flex;flex-direction:column;gap:3px}
+.slide-bullet{font-size:11px;color:#6B7094;display:flex;gap:6px;overflow:hidden}
+.slide-bullet span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slide-arabic-badge{font-size:9px;color:#FBBC04;background:#FBBC0412;border:1px solid #FBBC0422;
+  border-radius:4px;padding:1px 5px;margin-left:6px;flex-shrink:0;align-self:center}
+
+/* Spinner */
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.spinner{display:inline-block;width:16px;height:16px;
+  border:2px solid #ffffff33;border-top:2px solid #fff;
+  border-radius:50%;animation:spin 1s linear infinite;vertical-align:middle;margin-right:8px}
+
+/* Footer */
+.footer{text-align:center;margin-top:44px;color:#3A3D5C;font-size:11px;line-height:1.9}
+
+/* Animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.card,.dropzone,.progress-card,.success,#preview{animation:fadeUp .4s ease}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:#07080F}
+::-webkit-scrollbar-thumb{background:#2A2D45;border-radius:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="dots">
+      <div class="dot" style="background:#4285F4"></div>
+      <div class="dot" style="background:#34A853"></div>
+      <div class="dot" style="background:#FBBC04"></div>
+      <div class="dot" style="background:#EA4335"></div>
+    </div>
+    <h1>PDF → PowerPoint</h1>
+    <p class="subtitle">Convertis un cours PDF en présentation PowerPoint complète</p>
+  </div>
+
+  <!-- Settings toggle -->
+  <button class="settings-toggle" id="settingsToggle" onclick="toggleSettings()">
+    ⚙️&nbsp; Paramètres avancés
+    <span class="tgl-right">
+      <span class="tgl-status" id="tglStatus">Chargement...</span>
+      <span class="tgl-arrow">▾</span>
+    </span>
+  </button>
+
+  <!-- Settings panel -->
+  <div class="settings-panel card" id="settingsPanel">
+
+    <!-- API Key -->
+    <div class="settings-section">
+      <div class="settings-section-title">🔑 Clé API Gemini</div>
+      <div class="input-wrap">
+        <input type="password" id="apiKeySettings"
+          placeholder="Laisser vide pour utiliser la clé intégrée (recommandé)"
+          autocomplete="off" oninput="onApiKeyInput()"/>
+        <button class="eye-btn" onclick="toggleKeyVis()">👁️</button>
+      </div>
+      <div class="key-status">
+        <span class="badge" id="keyBadge">...</span>
+        <button class="reset-key-btn" id="resetKeyBtn" onclick="resetApiKey()" style="display:none">✕ Réinitialiser</button>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:#3A3D5C">
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#4285F4;text-decoration:none">Obtenir une clé sur aistudio.google.com →</a>
+      </div>
+    </div>
+
+    <div class="settings-sep"></div>
+
+    <!-- Prompt -->
+    <div class="settings-section">
+      <div class="settings-section-title" style="justify-content:space-between;align-items:center">
+        <span>🧠 Prompt envoyé à l'IA</span>
+        <button class="prompt-view-btn" id="promptViewBtn" onclick="toggleDefaultPrompt()">Voir le prompt par défaut</button>
+      </div>
+      <div class="prompt-viewer" id="promptViewer">
+        <textarea id="defaultPromptText" readonly rows="12"></textarea>
+      </div>
+      <div class="radio-group">
+        <div class="radio-option" id="mode-default" onclick="setPromptMode('default')">
+          <div class="radio-dot-outer"></div>
+          <div>
+            <div class="radio-label">Prompt par défaut</div>
+          </div>
+        </div>
+        <div class="radio-option" id="mode-supplement" onclick="setPromptMode('supplement')">
+          <div class="radio-dot-outer"></div>
+          <div>
+            <div class="radio-label">Défaut + instructions supplémentaires</div>
+          </div>
+        </div>
+        <div class="radio-option" id="mode-custom" onclick="setPromptMode('custom')">
+          <div class="radio-dot-outer"></div>
+          <div>
+            <div class="radio-label">Prompt entièrement personnalisé</div>
+          </div>
+        </div>
+      </div>
+      <div class="custom-prompt-wrap" id="customPromptWrap">
+        <div class="custom-prompt-label" id="customPromptLabel"></div>
+        <textarea id="customPromptText" rows="5" oninput="saveSettings()"></textarea>
+      </div>
+    </div>
+
+    <div class="settings-sep"></div>
+
+    <!-- Generation params -->
+    <div class="settings-section">
+      <div class="settings-section-title">🎛️ Paramètres de génération</div>
+      <div style="margin-bottom:16px">
+        <div style="font-size:12px;color:#9BA3D4;font-weight:600;margin-bottom:8px">Nombre de slides</div>
+        <div class="slides-range">
+          <label>Min</label>
+          <input type="number" id="minSlides" value="15" min="5" max="60" onchange="saveSettings()"/>
+          <label>Max</label>
+          <input type="number" id="maxSlides" value="35" min="5" max="60" onchange="saveSettings()"/>
+          <span class="range-hint">adapté selon le contenu</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:#9BA3D4;font-weight:600;margin-bottom:8px">Densité du contenu par slide</div>
+        <div class="density-group">
+          <button class="density-btn" id="density-concis" onclick="setDensity('concis')">Concis<span class="density-sub">3–5 points</span></button>
+          <button class="density-btn active" id="density-complet" onclick="setDensity('complet')">Complet<span class="density-sub">5–8 points</span></button>
+          <button class="density-btn" id="density-exhaustif" onclick="setDensity('exhaustif')">Exhaustif<span class="density-sub">8–12 points</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-sep"></div>
+
+    <!-- Theme selector -->
+    <div class="settings-section">
+      <div class="settings-section-title">🎨 Thème visuel de la présentation</div>
+      <div class="theme-grid" id="themeGrid"></div>
+    </div>
+
+  </div>
+
+  <!-- Drop zone -->
+  <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()"
+    ondragover="ev(event,'over')" ondragleave="ev(event,'leave')" ondrop="ev(event,'drop')">
+    <input type="file" id="fileInput" accept=".pdf" onchange="pickFile(this.files[0])"/>
+    <div class="icon" id="dzIcon">📂</div>
+    <div class="dz-title" id="dzTitle">Glisse ton PDF ici</div>
+    <div class="dz-sub" id="dzSub">ou clique pour parcourir · max 50 Mo</div>
+  </div>
+
+  <div class="error" id="error"></div>
+
+  <button id="genBtn" onclick="generate()">🚀&nbsp; Générer le PowerPoint</button>
+
+  <!-- Progress -->
+  <div class="card progress-card" id="progressCard">
+    <div class="steps">
+      <div class="step"><div class="step-num" id="snum0">1</div><div class="step-label" id="slbl0">Lecture du PDF</div></div>
+      <div class="step"><div class="step-num" id="snum1">2</div><div class="step-label" id="slbl1">Analyse IA</div></div>
+      <div class="step"><div class="step-num" id="snum2">3</div><div class="step-label" id="slbl2">Construction du PPTX</div></div>
+    </div>
+    <div class="step-hint show" id="stepHint">Peut prendre 30 à 90 secondes selon la taille du cours.</div>
+    <div class="pbar-track"><div class="pbar-fill" id="pbar"></div></div>
+    <div class="pbar-row"><span id="pbarLabel">En cours...</span><span id="pbarPct">0%</span></div>
+  </div>
+
+  <!-- Success -->
+  <div class="success" id="success">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">Présentation générée avec succès !</div>
+    <div class="success-sub">Téléchargée dans tes <strong style="color:#E8EAFF">Téléchargements</strong> → <code id="fileName"></code></div>
+    <div class="success-stats">
+      <div class="success-stat"><strong id="statSlides">—</strong> slides</div>
+      <div class="success-stat"><strong id="statArabic">—</strong> slides avec arabe</div>
+      <div class="success-stat">Thème : <strong id="statTheme">—</strong></div>
+    </div>
+
+  </div>
+
+  <!-- Preview -->
+  <div id="preview">
+    <div class="preview-header">
+      <h2>📋 Aperçu des slides</h2>
+      <span class="count-tag" id="slideCount"></span>
+      <span class="arabic-tag" id="arabicCount" style="display:none"></span>
+    </div>
+    <div class="slide-list" id="slideList"></div>
+  </div>
+
+ 
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  CONSTANTS
+// ══════════════════════════════════════════════════════════════
+
+const DEFAULT_API_KEY = 'AIzaSyAoEOFqsWAVtjqsxQGtkoW6bhsRIwfDdu8';
+
+const DEFAULT_PROMPT =
+`Tu es un expert en pédagogie et en transmission du savoir (cours académiques, religieux, techniques). \
+Analyse ce document PDF en INTÉGRALITÉ et génère une présentation PowerPoint COMPLÈTE, FIDÈLE et EXHAUSTIVE \
+qui couvre TOUT le contenu sans exception.
+
+═══════════════════════════════════════════════════════════════
+ RÈGLES ABSOLUES — LIS ET APPLIQUE CHACUNE
+═══════════════════════════════════════════════════════════════
+
+1. EXHAUSTIVITÉ TOTALE
+   • Parcours le PDF de la première à la dernière page — pas de saut, pas de résumé raccourci
+   • Inclus CHAQUE section, CHAQUE définition, CHAQUE règle, CHAQUE exemple, CHAQUE hadith, CHAQUE verset
+   • Crée autant de slides que nécessaire pour tout couvrir (jusqu'à {MAX_SLIDES})
+   • Il vaut mieux avoir trop de slides qu'un cours incomplet
+
+2. TEXTE ARABE — PRÉSERVATION ABSOLUE (CRITIQUE)
+   • Retranscris MOT POUR MOT et EXACTEMENT tous les textes arabes du PDF :
+     – Versets du Coran (آيات) avec la référence (sourate et numéro de verset)
+     – Hadiths du Prophète ﷺ avec leur source (البخاري، مسلم، أبو داود، النسائي...)
+     – Termes techniques islamiques (فقه، عقيدة، تصوف، تفسير، طهارة...)
+     – Invocations et du'a (أدعية وأذكار)
+     – Noms de savants, d'ouvrages, de compagnons
+     – Tout autre texte arabe présent dans le document
+   • Le texte arabe DOIT apparaître en caractères arabes, exactement tel qu'il est dans le PDF
+   • N'omets, ne translitères, ne paraphrases AUCUN texte arabe
+   • Si un bullet contient du texte arabe : écris d'abord le texte arabe, puis la traduction si disponible
+
+3. STRUCTURE FIDÈLE AU DOCUMENT
+   • Respecte EXACTEMENT l'ordre des chapitres et sous-sections
+   • Chaque section ou sous-section importante = au moins une slide dédiée
+   • Conserve les numérotations, titres et sous-titres exacts
+
+4. QUALITÉ DES BULLETS
+   • Chaque bullet peut faire jusqu'à 30 mots — priorise la complétude sur la concision
+   • Nombre de bullets : {BULLETS_MIN} à {BULLETS_MAX} par slide
+   • Bullets factuels, précis, complets — inclus conditions, exceptions, références
+
+5. NOTES DU PRÉSENTATEUR (OBLIGATOIRES)
+   • Minimum 3 phrases de notes détaillées par slide
+   • Explique le contexte, les nuances, ce que le professeur dirait à l'oral
+
+═══════════════════════════════════════════════════════════════
+ FORMAT JSON STRICT
+═══════════════════════════════════════════════════════════════
+
+RÉPONDS UNIQUEMENT EN JSON VALIDE — aucun texte avant ou après, aucun bloc markdown.
+
+{
+  "courseTitle": "Titre exact du cours",
+  "slides": [
+    {
+      "title": "Titre de la slide",
+      "bullets": ["Point complet", "Texte arabe : قُولُوا خَيْرًا — traduction si présente", "Autre point"],
+      "notes": "Notes détaillées (min 3 phrases) pour le présentateur.",
+      "type": "title"
+    }
+  ]
+}
+
+TYPES : "title" (slide 1 seulement) · "content" (slides intermédiaires) · "summary" (dernière slide)
+NOMBRE DE SLIDES : entre {MIN_SLIDES} et {MAX_SLIDES}
+
+═══════════════════════════════════════════════════════════════
+ VÉRIFICATION AVANT DE RÉPONDRE
+═══════════════════════════════════════════════════════════════
+✓ Tout le contenu du PDF est couvert (première à dernière page) ?
+✓ Tous les textes arabes sont retranscrits exactement ?
+✓ La structure originale du cours est respectée ?
+✓ Chaque slide a des notes substantielles ?
+✓ Le JSON est valide et complet ?`;
+
+// ══════════════════════════════════════════════════════════════
+//  THEMES
+// ══════════════════════════════════════════════════════════════
+
+const THEMES = {
+  islamique: {
+    name: 'Islamique',
+    sub: 'Vert & Or',
+    swatchA: '#0D2818',
+    swatchB: '#FDF9F0',
+    // Slide colors
+    titleBg:    '0D2818',
+    titleBar:   '1A3C34',
+    titleAccent:'C9A227',
+    headerBg:   '1A3C34',
+    contentBg:  'FDF9F0',
+    accentA:    '2E7D32',
+    accentB:    'B8860B',
+    rowOdd:     'F0F7F2',
+    rowEven:    'F9FCF9',
+    textDark:   '1A2E1A',
+    textLight:  'E8F5E9',
+    textMuted:  '7A9E7E',
+    dots: ['2E7D32','C9A227','81C784','F9A825']
+  },
+  marine: {
+    name: 'Marine',
+    sub: 'Bleu & Vert',
+    swatchA: '#07080F',
+    swatchB: '#F9FAFF',
+    titleBg:    '07080F',
+    titleBar:   '0E1019',
+    titleAccent:'4285F4',
+    headerBg:   '0E1019',
+    contentBg:  'F9FAFF',
+    accentA:    '4285F4',
+    accentB:    '34A853',
+    rowOdd:     'EEF2FF',
+    rowEven:    'F6F8FF',
+    textDark:   '1A1C2E',
+    textLight:  'E8EAFF',
+    textMuted:  '6B7094',
+    dots: ['4285F4','34A853','FBBC04','EA4335']
+  },
+  bordeaux: {
+    name: 'Bordeaux',
+    sub: 'Bordeaux & Or',
+    swatchA: '#3D0814',
+    swatchB: '#FDF8F0',
+    titleBg:    '3D0814',
+    titleBar:   '6B1B29',
+    titleAccent:'D4A017',
+    headerBg:   '6B1B29',
+    contentBg:  'FDF8F0',
+    accentA:    '8B2635',
+    accentB:    'C49A0C',
+    rowOdd:     'FDF0F3',
+    rowEven:    'FBF5F0',
+    textDark:   '3D0814',
+    textLight:  'F9EDE5',
+    textMuted:  '9C6B73',
+    dots: ['8B2635','D4A017','C45C6A','E8C547']
+  },
+  academique: {
+    name: 'Académique',
+    sub: 'Bleu nuit & Or',
+    swatchA: '#1A2744',
+    swatchB: '#FFFFFF',
+    titleBg:    '1A2744',
+    titleBar:   '243558',
+    titleAccent:'FFC300',
+    headerBg:   '1A2744',
+    contentBg:  'FFFFFF',
+    accentA:    '1565C0',
+    accentB:    'E6A800',
+    rowOdd:     'EEF4FF',
+    rowEven:    'F8FAFF',
+    textDark:   '1A2744',
+    textLight:  'FFFFFF',
+    textMuted:  '7A90B0',
+    dots: ['1565C0','FFC300','00897B','E53935']
+  },
+  minimaliste: {
+    name: 'Minimaliste',
+    sub: 'Charbon & Rouge',
+    swatchA: '#151515',
+    swatchB: '#FAFAFA',
+    titleBg:    '151515',
+    titleBar:   '1E1E1E',
+    titleAccent:'CC0000',
+    headerBg:   '1E1E1E',
+    contentBg:  'FAFAFA',
+    accentA:    'CC0000',
+    accentB:    '444444',
+    rowOdd:     'F3F3F3',
+    rowEven:    'FAFAFA',
+    textDark:   '1A1A1A',
+    textLight:  'F5F5F5',
+    textMuted:  '888888',
+    dots: ['CC0000','444444','FF4444','666666']
+  }
+};
+
+// ══════════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════════
+
+let currentFile = null;
+let promptMode    = 'default';
+let density       = 'complet';
+let selectedTheme = 'islamique';
+let showDefaultPrompt = false;
+const COLORS = ['#4285F4','#34A853','#A78BFA','#F97316','#FBBC04'];
+
+// ══════════════════════════════════════════════════════════════
+//  SETTINGS PERSISTENCE
+// ══════════════════════════════════════════════════════════════
+
+function saveSettings() {
+  try {
+    localStorage.setItem('pdf2pptx_v2', JSON.stringify({
+      customApiKey: document.getElementById('apiKeySettings').value.trim(),
+      promptMode, density, selectedTheme,
+      customPromptText: document.getElementById('customPromptText').value,
+      minSlides: document.getElementById('minSlides').value,
+      maxSlides: document.getElementById('maxSlides').value
+    }));
+  } catch(e) {}
+  updateToggleStatus();
+}
+
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem('pdf2pptx_v2') || '{}');
+    if (s.customApiKey) document.getElementById('apiKeySettings').value = s.customApiKey;
+    if (s.promptMode)   promptMode = s.promptMode;
+    if (s.density)      density = s.density;
+    if (s.selectedTheme && THEMES[s.selectedTheme]) selectedTheme = s.selectedTheme;
+    if (s.customPromptText) document.getElementById('customPromptText').value = s.customPromptText;
+    if (s.minSlides) document.getElementById('minSlides').value = s.minSlides;
+    if (s.maxSlides) document.getElementById('maxSlides').value = s.maxSlides;
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════════════════════════
+//  API KEY
+// ══════════════════════════════════════════════════════════════
+
+function getEffectiveApiKey() {
+  return document.getElementById('apiKeySettings').value.trim() || DEFAULT_API_KEY;
+}
+
+function onApiKeyInput() {
+  const custom = document.getElementById('apiKeySettings').value.trim();
+  const badge = document.getElementById('keyBadge');
+  const resetBtn = document.getElementById('resetKeyBtn');
+  if (custom) {
+    badge.className = 'badge badge-custom';
+    badge.textContent = '✓ Clé personnalisée active';
+    resetBtn.style.display = '';
+  } else {
+    badge.className = 'badge badge-default';
+    badge.textContent = '✓ Clé intégrée par défaut';
+    resetBtn.style.display = 'none';
+  }
+  saveSettings();
+}
+
+function resetApiKey() { document.getElementById('apiKeySettings').value = ''; onApiKeyInput(); }
+
+function toggleKeyVis() {
+  const inp = document.getElementById('apiKeySettings');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  inp.parentElement.querySelector('.eye-btn').textContent = inp.type === 'password' ? '👁️' : '🙈';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SETTINGS PANEL
+// ══════════════════════════════════════════════════════════════
+
+function toggleSettings() {
+  const panel = document.getElementById('settingsPanel');
+  const toggle = document.getElementById('settingsToggle');
+  panel.classList.toggle('open');
+  toggle.classList.toggle('open');
+}
+
+function updateToggleStatus() {
+  const custom = document.getElementById('apiKeySettings').value.trim();
+  const T = THEMES[selectedTheme];
+  const parts = [
+    custom ? 'Clé perso.' : 'Clé intégrée',
+    promptMode === 'supplement' ? '+instructions' : promptMode === 'custom' ? 'Prompt perso.' : 'Prompt optimisé',
+    T ? T.name : selectedTheme
+  ];
+  document.getElementById('tglStatus').textContent = parts.join(' · ');
+}
+
+function toggleDefaultPrompt() {
+  showDefaultPrompt = !showDefaultPrompt;
+  document.getElementById('promptViewer').classList.toggle('show', showDefaultPrompt);
+  document.getElementById('promptViewBtn').textContent =
+    showDefaultPrompt ? 'Masquer le prompt' : 'Voir le prompt par défaut';
+  if (showDefaultPrompt) document.getElementById('defaultPromptText').value = buildFinalPrompt(true);
+}
+
+function setPromptMode(mode) {
+  promptMode = mode;
+  ['default','supplement','custom'].forEach(m => {
+    document.getElementById('mode-' + m).classList.toggle('selected', m === mode);
+  });
+  const wrap = document.getElementById('customPromptWrap');
+  wrap.classList.toggle('show', mode !== 'default');
+  const label = document.getElementById('customPromptLabel');
+  const ta = document.getElementById('customPromptText');
+  if (mode === 'supplement') {
+    label.textContent = 'Instructions supplémentaires (ajoutées après le prompt de base) :';
+    ta.placeholder = 'Ex: Ce cours porte sur le droit islamique hanafite. Assure-toi que chaque hadith est transcrit en arabe avec sa source exacte.';
+  } else {
+    label.textContent = 'Prompt personnalisé complet (remplace le prompt par défaut) :';
+    ta.placeholder = 'Décris exactement comment l\'IA doit analyser le PDF et générer les slides...';
+  }
+  saveSettings();
+}
+
+function setDensity(d) {
+  density = d;
+  ['concis','complet','exhaustif'].forEach(dd => {
+    document.getElementById('density-' + dd).classList.toggle('active', dd === d);
+  });
+  saveSettings();
+}
+
+// ── Theme system ────────────────────────────────────────────
+function initThemeGrid() {
+  const grid = document.getElementById('themeGrid');
+  Object.entries(THEMES).forEach(([id, t]) => {
+    const card = document.createElement('div');
+    card.className = 'theme-card';
+    card.id = 'theme-' + id;
+    card.onclick = () => setTheme(id);
+    card.innerHTML = `
+      <div class="theme-swatch">
+        <div class="theme-swatch-a" style="background:${t.swatchA}"></div>
+        <div class="theme-swatch-b" style="background:${t.swatchB}"></div>
+      </div>
+      <div class="theme-card-body">
+        <div class="theme-card-name">${t.name}</div>
+        <div class="theme-card-sub">${t.sub}</div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function setTheme(id) {
+  selectedTheme = id;
+  document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
+  const card = document.getElementById('theme-' + id);
+  if (card) card.classList.add('active');
+  saveSettings();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PROMPT BUILDER
+// ══════════════════════════════════════════════════════════════
+
+function buildFinalPrompt(preview = false) {
+  const minSlides = parseInt(document.getElementById('minSlides').value) || 15;
+  const maxSlides = parseInt(document.getElementById('maxSlides').value) || 35;
+  const dMap = { concis:{min:3,max:5}, complet:{min:5,max:8}, exhaustif:{min:8,max:12} };
+  const d = dMap[density] || dMap.complet;
+
+  const base = DEFAULT_PROMPT
+    .replace(/{MIN_SLIDES}/g, minSlides)
+    .replace(/{MAX_SLIDES}/g, maxSlides)
+    .replace(/{BULLETS_MIN}/g, d.min)
+    .replace(/{BULLETS_MAX}/g, d.max);
+
+  if (preview) return base;
+
+  const custom = document.getElementById('customPromptText').value.trim();
+  if (promptMode === 'default' || !custom) return base;
+  if (promptMode === 'supplement') {
+    return base + '\n\n═══════════════════════════════════════════════════════════════\n' +
+      ' INSTRUCTIONS SUPPLÉMENTAIRES (PRIORITAIRES)\n' +
+      '═══════════════════════════════════════════════════════════════\n\n' + custom;
+  }
+  return custom;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  FILE HANDLING
+// ══════════════════════════════════════════════════════════════
+
+function ev(e, type) {
+  e.preventDefault();
+  const dz = document.getElementById('dropzone');
+  if (type === 'over') dz.classList.add('drag');
+  else if (type === 'leave') dz.classList.remove('drag');
+  else { dz.classList.remove('drag'); pickFile(e.dataTransfer.files[0]); }
+}
+
+function pickFile(f) {
+  if (!f) return;
+  if (f.type !== 'application/pdf') return showError('Fichier invalide — sélectionnez un PDF.');
+  currentFile = f;
+  document.getElementById('dzIcon').textContent = '📄';
+  document.getElementById('dzTitle').textContent = f.name;
+  document.getElementById('dzTitle').style.color = '#4285F4';
+  document.getElementById('dzSub').textContent = (f.size/1024).toFixed(0) + ' Ko · Cliquer pour changer';
+  hideError();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  UI HELPERS
+// ══════════════════════════════════════════════════════════════
+
+function showError(msg) {
+  const el = document.getElementById('error');
+  el.textContent = '⚠️  ' + msg;
+  el.classList.add('show');
+}
+function hideError() { document.getElementById('error').classList.remove('show'); }
+
+function setProgress(pct, label) {
+  document.getElementById('pbar').style.width = pct + '%';
+  document.getElementById('pbarPct').textContent = pct + '%';
+  if (label) document.getElementById('pbarLabel').textContent = label;
+}
+
+function setStep(idx) {
+  document.getElementById('stepHint').classList.toggle('show', idx === 1);
+  for (let i = 0; i < 3; i++) {
+    const num = document.getElementById('snum' + i);
+    const lbl = document.getElementById('slbl' + i);
+    num.className = 'step-num' + (i < idx ? ' done' : i === idx ? ' active' : '');
+    num.textContent = i < idx ? '✓' : i + 1;
+    lbl.className = 'step-label' + (i < idx ? ' done' : i === idx ? ' active' : '');
+  }
+}
+
+function setRunning(yes) {
+  const btn = document.getElementById('genBtn');
+  btn.disabled = yes;
+  btn.innerHTML = yes ? '<span class="spinner"></span>Génération en cours...' : '🚀&nbsp; Générer le PowerPoint';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  BASE64 + ARABIC DETECTION
+// ══════════════════════════════════════════════════════════════
+
+function toBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+function hasArabic(text) {
+  return /[؀-ۿ؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿]/.test(text || '');
+}
+
+function countArabicSlides(slides) {
+  return slides.filter(s => hasArabic(s.title) || (s.bullets||[]).some(b => hasArabic(b))).length;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  GEMINI API
+// ══════════════════════════════════════════════════════════════
+
+async function callGemini(apiKey, b64, prompt) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      contents: [{parts: [
+        {inline_data: {mime_type:'application/pdf', data:b64}},
+        {text: prompt}
+      ]}],
+      generationConfig: {temperature:0.2, maxOutputTokens:65536}
+    })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(()=>({}));
+    const msg = err?.error?.message || '';
+    if (res.status === 400 || res.status === 403) throw new Error('Clé API invalide. Vérifiez sur aistudio.google.com/app/apikey');
+    if (res.status === 429) throw new Error('Quota Gemini atteint (500 req/jour). Réessayez demain ou dans 1 minute.');
+    throw new Error(msg || 'Erreur API Gemini ' + res.status);
+  }
+  const data = await res.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  if (!text) {
+    const reason = data.candidates?.[0]?.finishReason;
+    if (reason === 'MAX_TOKENS') throw new Error('Réponse tronquée. Réduisez le nombre de slides max ou la densité.');
+    throw new Error('Réponse vide de l\'IA. Réessayez.');
+  }
+  return text;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PPTXGENJS LOADER
+// ══════════════════════════════════════════════════════════════
+
+function loadScript(url) {
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = url; s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
+
+async function ensurePptx() {
+  if (window.PptxGenJS) return;
+  const cdns = [
+    'https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js',
+    'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js',
+    'https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js',
+  ];
+  for (const url of cdns) {
+    try { await loadScript(url); if (window.PptxGenJS) return; } catch(e) {}
+  }
+  throw new Error('Impossible de charger PptxGenJS. Vérifiez votre connexion.');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  BUILD PPTX
+// ══════════════════════════════════════════════════════════════
+
+async function buildPptx(data) {
+  await ensurePptx();
+  const pptx = new PptxGenJS();
+  pptx.layout = 'LAYOUT_16x9';
+  pptx.title = data.courseTitle;
+
+  const T = THEMES[selectedTheme] || THEMES.islamique;
+
+  data.slides.forEach((slide, i) => {
+    const s = pptx.addSlide();
+    const isTitle   = i === 0 || slide.type === 'title';
+    const isSummary = (i === data.slides.length - 1 && data.slides.length > 1) || slide.type === 'summary';
+    const accent    = i % 2 === 0 ? T.accentA : T.accentB;
+    const bullets   = slide.bullets || [];
+    const titleIsAr = hasArabic(slide.title);
+
+    // ── TITLE SLIDE ──────────────────────────────────────────
+    if (isTitle) {
+      // Full background
+      s.addShape(pptx.ShapeType.rect, {x:0,y:0,w:'100%',h:'100%',fill:{color:T.titleBg}});
+      // Thick accent bar on left (more prominent)
+      s.addShape(pptx.ShapeType.rect, {x:0,y:0,w:0.18,h:'100%',fill:{color:T.titleAccent}});
+      // Bottom footer area
+      s.addShape(pptx.ShapeType.rect, {x:0,y:4.7,w:'100%',h:1.05,fill:{color:T.titleBar}});
+      // Top accent stripe
+      s.addShape(pptx.ShapeType.rect, {x:0,y:0,w:'100%',h:0.06,fill:{color:T.titleAccent}});
+      // Decorative dots in footer
+      T.dots.forEach((c, ci) => {
+        s.addShape(pptx.ShapeType.ellipse, {x:0.55+ci*0.32,y:4.88,w:0.16,h:0.16,fill:{color:c}});
+      });
+      // Course title
+      s.addText(slide.title, {
+        x:0.45, y:0.8, w:9.2, h:3.0,
+        fontSize: slide.title.length > 50 ? 28 : slide.title.length > 30 ? 34 : 40,
+        bold:true, color:T.textLight, fontFace:'Calibri',
+        align: titleIsAr ? 'right' : 'left',
+        valign:'middle', wrap:true, rtlMode:titleIsAr
+      });
+      // Subtitle / first bullet
+      if (bullets[0]) {
+        const isAr = hasArabic(bullets[0]);
+        s.addText(bullets[0], {
+          x:0.45, y:3.85, w:9, h:0.75,
+          fontSize:14, color:T.textMuted, fontFace:'Calibri',
+          align: isAr ? 'right' : 'left', wrap:true, rtlMode:isAr
+        });
+      }
+      // Footer text
+      s.addText(`${Math.max(0, data.slides.length-2)} sections · Cours complet · Généré avec Gemini AI`, {
+        x:0.45, y:5.12, w:9, h:0.28, fontSize:10, color:T.textMuted, fontFace:'Calibri'
+      });
+
+    // ── SUMMARY SLIDE ────────────────────────────────────────
+    } else if (isSummary) {
+      s.addShape(pptx.ShapeType.rect, {x:0,y:0,w:'100%',h:'100%',fill:{color:T.titleBg}});
+      // Left accent bar
+      s.addShape(pptx.ShapeType.rect, {x:0,y:0,w:0.18,h:'100%',fill:{color:T.accentB}});
+      // Header area
+      s.addShape(pptx.ShapeType.rect, {x:0,y:0,w:'100%',h:1.25,fill:{color:T.titleBar}});
+      // Top stripe
+      s.addShape(pptx.ShapeType.rect, {x:0,y:0,w:'100%',h:0.06,fill:{color:T.accentB}});
+      // "Synthèse" badge
+      s.addShape(pptx.ShapeType.roundRect, {x:9.1,y:0.22,w:0.7,h:0.38,fill:{color:T.accentB},rectRadius:0.08});
+      s.addText('✓', {x:9.1,y:0.22,w:0.7,h:0.38,fontSize:14,color:'FFFFFF',align:'center',valign:'middle'});
+      // Title
+      s.addText(slide.title, {
+        x:0.4, y:0.15, w:8.5, h:0.98,
+        fontSize: slide.title.length > 40 ? 22 : 26,
+        bold:true, color:T.textLight, fontFace:'Calibri',
+        align: titleIsAr ? 'right' : 'left', rtlMode:titleIsAr, valign:'middle'
+      });
+      // Separator
+      s.addShape(pptx.ShapeType.rect, {x:0.18,y:1.25,w:9.82,h:0.03,fill:{color:T.accentB}});
+      // Bullets
+      const txtArr = bullets.map(b => {
+        const isAr = hasArabic(b);
+        return {
+          text: b,
+          options: {
+            fontSize: bullets.length > 10 ? 10 : bullets.length > 7 ? 12 : 13,
+            color: T.textLight, breakLine:true, paraSpaceAfter:8,
+            bullet: {type:'bullet', characterCode:'25A0', color:T.accentB},
+            fontFace:'Calibri',
+            align: isAr ? 'right' : 'left', rtlMode:isAr
+          }
+        };
+      });
+      s.addText(txtArr, {x:0.5,y:1.35,w:9.1,h:3.85,valign:'top'});
+      // Slide counter
+      s.addText(`${i+1} / ${data.slides.length}`, {
+        x:8.3,y:5.22,w:1.5,h:0.2,fontSize:9,color:T.textMuted,align:'right'
+      });
+
+    // ── CONTENT SLIDE ────────────────────────────────────────
+    } else {
+      const bc       = bullets.length;
+      const headerH  = 1.12;
+      const startY   = headerH + 0.12;
+      const maxY     = 5.65;
+      const avail    = maxY - startY;
+      // Adaptive row height and font size based on bullet count
+      const rowH     = bc <= 3 ? 0.82 : bc <= 5 ? 0.72 : bc <= 7 ? 0.60 : bc <= 9 ? 0.52 : bc <= 11 ? 0.45 : 0.40;
+      const fontSize = bc <= 3 ? 15   : bc <= 5 ? 14   : bc <= 7 ? 13   : bc <= 9 ? 12   : bc <= 11 ? 11   : 10;
+
+      // Background
+      s.addShape(pptx.ShapeType.rect, {x:0,y:0,w:'100%',h:'100%',fill:{color:T.contentBg}});
+      // Header bar
+      s.addShape(pptx.ShapeType.rect, {x:0,y:0,w:'100%',h:headerH,fill:{color:T.headerBg}});
+      // Left accent bar (full height)
+      s.addShape(pptx.ShapeType.rect, {x:0,y:0,w:0.08,h:'100%',fill:{color:accent}});
+      // Right accent on header
+      s.addShape(pptx.ShapeType.rect, {x:9.88,y:0,w:0.12,h:headerH,fill:{color:T.titleAccent}});
+      // Bottom separator
+      s.addShape(pptx.ShapeType.rect, {x:0.08,y:headerH,w:9.92,h:0.025,fill:{color:accent}});
+      // Slide number badge (top right)
+      s.addShape(pptx.ShapeType.roundRect, {x:9.05,y:0.32,w:0.7,h:0.44,fill:{color:accent},rectRadius:0.09});
+      s.addText(`${i}`, {
+        x:9.05,y:0.32,w:0.7,h:0.44,
+        fontSize:12, bold:true, color:'FFFFFF', align:'center', valign:'middle'
+      });
+      // Slide title
+      s.addText(slide.title, {
+        x:0.25, y:0.1, w:8.65, h:headerH-0.12,
+        fontSize: slide.title.length > 65 ? 16 : slide.title.length > 45 ? 19 : slide.title.length > 30 ? 21 : 23,
+        bold:true, color:T.textLight, fontFace:'Calibri',
+        align: titleIsAr ? 'right' : 'left',
+        valign:'middle', wrap:true, rtlMode:titleIsAr
+      });
+
+      // Bullets
+      bullets.forEach((b, bi) => {
+        const y = startY + bi * rowH;
+        if (y + rowH * 0.4 > maxY) return; // clip overflow
+        const isAr = hasArabic(b);
+
+        // Alternating row background
+        s.addShape(pptx.ShapeType.rect, {
+          x:0.1, y:y+0.025, w:9.68, h:rowH-0.05,
+          fill:{color: bi%2===0 ? T.rowOdd : T.rowEven}
+        });
+        // Bullet accent bar — left for LTR, right for Arabic
+        s.addShape(pptx.ShapeType.rect, {
+          x: isAr ? 9.6 : 0.14,
+          y: y + (rowH - 0.32) / 2,
+          w: 0.07, h: 0.32,
+          fill:{color: accent}
+        });
+        // Bullet text
+        s.addText(b, {
+          x: 0.3, y, w: 9.4, h: rowH,
+          fontSize, color:T.textDark, fontFace:'Calibri',
+          align: isAr ? 'right' : 'left',
+          valign:'middle', wrap:true, rtlMode:isAr
+        });
+      });
+
+      // Overflow indicator
+      const maxVisible = Math.floor(avail / rowH);
+      if (bc > maxVisible) {
+        s.addText(`+ ${bc - maxVisible} points supplémentaires dans les notes du présentateur`, {
+          x:0.1, y:maxY-0.22, w:9.5, h:0.22,
+          fontSize:9, color:T.textMuted, align:'center', italic:true
+        });
+      }
+
+      if (slide.notes) s.addNotes(slide.notes);
+    }
+  });
+
+  const safe = (data.courseTitle||'cours').replace(/[^a-zA-Z0-9À-ÿ؀-ۿ _-]/g,'').trim();
+  await pptx.writeFile({fileName:(safe||'cours')+'.pptx'});
+  return safe||'cours';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SLIDES PREVIEW
+// ══════════════════════════════════════════════════════════════
+
+function renderPreview(slides) {
+  const total = slides.length;
+  const arabicCount = countArabicSlides(slides);
+
+  document.getElementById('slideCount').textContent = total + ' slides';
+  const arabicTag = document.getElementById('arabicCount');
+  if (arabicCount > 0) {
+    arabicTag.textContent = arabicCount + ' avec texte arabe';
+    arabicTag.style.display = '';
+  } else {
+    arabicTag.style.display = 'none';
+  }
+
+  const list = document.getElementById('slideList');
+  list.innerHTML = '';
+  slides.forEach((sl, i) => {
+    const col = COLORS[i % COLORS.length];
+    const slArabic = hasArabic(sl.title) || (sl.bullets||[]).some(b => hasArabic(b));
+    const item = document.createElement('div');
+    item.className = 'slide-item';
+    const bulletsHtml = (sl.bullets||[]).slice(0,3).map(b => {
+      const isAr = hasArabic(b);
+      return `<div class="slide-bullet">
+        <span style="color:${col};flex-shrink:0">›</span>
+        <span dir="${isAr?'rtl':'ltr'}">${b}</span>
+      </div>`;
+    }).join('') + (sl.bullets?.length > 3
+      ? `<div style="font-size:11px;color:${col};margin-top:2px">+${sl.bullets.length-3} points</div>`
+      : '');
+    item.innerHTML = `
+      <div class="slide-num" style="background:${col}1A;border:1.5px solid ${col}55;color:${col}">${i+1}</div>
+      <div class="slide-content">
+        <div class="slide-title" dir="${hasArabic(sl.title)?'rtl':'ltr'}">
+          ${sl.title}${slArabic?'<span class="slide-arabic-badge">عربي</span>':''}
+        </div>
+        <div class="slide-bullets">${bulletsHtml}</div>
+      </div>`;
+    list.appendChild(item);
+  });
+  document.getElementById('preview').classList.add('show');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MAIN GENERATE
+// ══════════════════════════════════════════════════════════════
+
+async function generate() {
+  if (!currentFile) return showError('Veuillez charger un fichier PDF.');
+  hideError();
+  setRunning(true);
+  document.getElementById('progressCard').classList.add('show');
+  document.getElementById('success').classList.remove('show');
+  document.getElementById('preview').classList.remove('show');
+
+  try {
+    setStep(0); setProgress(5, 'Lecture du PDF...');
+    const b64 = await toBase64(currentFile);
+    setProgress(22);
+
+    setStep(1); setProgress(28, 'Analyse complète du cours par Gemini (30–90 sec.)...');
+    const raw = await callGemini(getEffectiveApiKey(), b64, buildFinalPrompt());
+    setProgress(68, 'Analyse terminée · Structuration des slides...');
+
+    let parsed;
+    try {
+      let clean = raw.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+      try { parsed = JSON.parse(clean); }
+      catch { const m = clean.match(/\{[\s\S]*\}/); parsed = m ? JSON.parse(m[0]) : null; }
+    } catch { parsed = null; }
+
+    if (!parsed?.slides?.length) {
+      throw new Error('Réponse IA non analysable ou vide. Réduisez la densité ou le nombre de slides max, puis réessayez.');
+    }
+
+    setStep(2); setProgress(76, 'Construction du fichier PowerPoint...');
+    const safeName = await buildPptx(parsed);
+    setProgress(100, '✅ Terminé !');
+
+    const total = parsed.slides.length;
+    const arabicCount = countArabicSlides(parsed.slides);
+    document.getElementById('fileName').textContent = safeName + '.pptx';
+    document.getElementById('statSlides').textContent = total;
+    document.getElementById('statArabic').textContent = arabicCount;
+    document.getElementById('statTheme').textContent = THEMES[selectedTheme]?.name || selectedTheme;
+    document.getElementById('success').classList.add('show');
+    renderPreview(parsed.slides);
+
+  } catch(e) {
+    showError(e.message || 'Erreur inconnue. Réessayez.');
+    document.getElementById('progressCard').classList.remove('show');
+  } finally {
+    setRunning(false);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════════
+
+(function init() {
+  initThemeGrid();
+  loadSettings();
+  setPromptMode(promptMode);
+  setDensity(density);
+  setTheme(selectedTheme);
+  onApiKeyInput();
+  updateToggleStatus();
+})();
+</script>
+</body>
+</html>
